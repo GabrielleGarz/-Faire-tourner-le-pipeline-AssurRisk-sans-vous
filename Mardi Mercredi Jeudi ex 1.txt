@@ -1,0 +1,70 @@
+import psycopg2
+from getpass import getpass
+import time 
+import pandas as pd
+import json
+import io
+
+mot_de_passe = getpass("Mot de passe PostgreSQL : ")
+
+connexion = psycopg2.connect(host="localhost", port=5432, dbname="assurisk2",
+                             user="postgres", password=mot_de_passe)
+connexion.autocommit = True
+curseur = connexion.cursor()
+print("connexion ouverte")
+
+#DEMAIN — trois étapes, et une seule écriture
+
+etapes = [
+    ("01_init.sql",         "Reinitialiser la base"),
+    ("02_clean.sql",        "Construire la couche propre"),
+    ("03_tables_meteo.sql", "Creer les tables qui attendent la meteo"),
+]
+
+
+
+journal = []
+for fichier, libelle in etapes:
+    debut = time.time()
+    requete = open(fichier, encoding="utf-8").read()
+    curseur.execute(requete)
+    duree = round(time.time() - debut, 1)
+    journal.append([fichier, libelle, "SQL", duree])
+    print("  [SQL]", libelle, "-", duree, "s")
+
+
+#ETAPE PYTHON : le JSON entre dans la base ---
+debut = time.time()
+
+meteo_brute = json.load(open("meteo_30_villes.json", encoding="utf-8"))
+
+morceaux = []
+for localisation in meteo_brute:
+    tableau = pd.DataFrame(localisation["daily"])
+    tableau["latitude"]  = localisation["latitude"]
+    tableau["longitude"] = localisation["longitude"]
+    morceaux.append(tableau)
+
+meteo = pd.concat(morceaux, ignore_index=True)
+
+tampon = io.StringIO()
+meteo.to_csv(tampon, index=False, header=False)
+tampon.seek(0)
+curseur.copy_expert("COPY meteo_assurrisk FROM STDIN WITH (FORMAT csv)", tampon)
+
+villes = pd.read_csv("villes_coordonnees_meteo.csv")
+tampon = io.StringIO()
+villes.to_csv(tampon, index=False, header=False)
+tampon.seek(0)
+curseur.copy_expert("COPY villes_coordonnees_meteo FROM STDIN WITH (FORMAT csv)", tampon)
+
+duree = round(time.time() - debut, 1)
+journal.append(["pipeline.py", "Charger la meteo et les villes", "PYTHON", duree])
+print("  [PYTHON]", len(meteo), "lignes de meteo et", len(villes), "villes -", duree, "s")
+
+suivi = pd.DataFrame(journal, columns=["fichier", "etape", "outil", "secondes"])
+suivi.to_csv("../sorties/journal_pipeline.csv", sep=";", decimal=",",
+             index=False, encoding="utf-8-sig")
+
+verification = pd.read_sql("SELECT count(*) AS n FROM clean_fact_sinistre", connexion)
+print("      controle : clean_fact_sinistre =", verification["n"][0], "lignes")

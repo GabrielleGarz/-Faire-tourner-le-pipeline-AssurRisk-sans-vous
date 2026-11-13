@@ -1,0 +1,23 @@
+La preuve de rejouabilité : les deux journaux de deux lancements successifs, et une ligne disant ce qui est identique.
+
+
+1er lancement :
+
+fichier;etape;outil;secondes
+1_init.sql;Reinitialiser la base;SQL;62,3
+02_clean.sql;Construire la couche propre;SQL;14,6
+03_tables_meteo.sql;Creer les tables qui attendent la meteo;SQL;0,0
+04_rattachement.sql;Rattacher la couche propre aux tables meteo;SQL;0,0
+05_croisement.sql;Croiser la meteo avec les donnees assurisk;SQL;0,0
+06_controles.sql;Lancer les controles de cohérence sur les tables meteo;SQL;0,0
+
+2e lancement :
+
+  [SQL] Reinitialiser la base - 89.5 s
+  [SQL] Construire la couche propre - 21.2 s
+  [SQL] Creer les tables qui attendent la meteo - 0.0 s
+  [SQL] Rattacher la couche propre aux tables meteo - 0.0 s
+  [SQL] Croiser la meteo avec les donnees assurisk - 0.0 s
+  [SQL] Lancer les controles de cohérence sur les tables meteo - 0.0 s
+
+La séquence exacte des scripts exécutés, leurs libellés et l'ordre d'enchaînement de la base vers les contrôles sont strictement identiques d'un lancement à l'autre.

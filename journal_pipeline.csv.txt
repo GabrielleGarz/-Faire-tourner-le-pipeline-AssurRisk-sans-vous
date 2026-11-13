@@ -1,0 +1,36 @@
+journal_pipeline.csv :
+
+fichier;etape;outil;secondes
+01_init.sql;Reinitialiser la base;SQL;100,8
+02_clean.sql;Construire la couche propre;SQL;26,4
+03_tables_meteo.sql;Creer les tables qui attendent la meteo;SQL;0,0
+pipeline.py;Charger la meteo et les villes;PYTHON;0,3
+04_rattachement.sql;Rattacher la meteo aux sinistres;SQL;0,2
+05_croisement.sql;Creer la table fact_sinistre_meteo;SQL;0,1
+06_controles.sql;Lancer les controles de cohérence;SQL;0,0
+
+controles_python.csv :
+
+controle;objet;valeur_observee;attendu
+garde_fichier_local;meteo_30_villes.json;True;True
+nb_villes_json;meteo_brute;30;30
+lignes_dataframe_meteo;meteo;21930;21930
+lignes_clean_fact_sinistre;clean_fact_sinistre;12098;> 0
+lignes_villes_chargees;villes_coordonnees_meteo;31;31
+
+controles.csv :
+
+controle;lignes_resultat
+doublons_fact_sinistre_meteo;0
+sans_meteo;1
+doublons_clean_fact_sinistre;0
+doublons_clean_dim_contrat;0
+doublons_clean_dim_garantie;0
+doublons_clean_fact_indemnisation;0
+doublons_clean_contrat_garantie;29568
+doublons_clean_dim_assure;0
+doublons_clean_dim_agence;0
+total_meteo_assurrisk;1
+total_meteo_assurrisk_ville;1
+meteo_en_double;0
+total_villes_coordonnees_meteo;1

@@ -1,0 +1,8 @@
+﻿fichier;etape;outil;secondes
+01_init.sql;Reinitialiser la base;SQL;92,1
+02_clean.sql;Construire la couche propre;SQL;23,4
+03_tables_meteo.sql;Creer les tables qui attendent la meteo;SQL;0,1
+pipeline.py;Charger la meteo et les villes;PYTHON;0,5
+04_rattachement.sql;Rattacher la meteo aux sinistres;SQL;0,2
+05_croisement.sql;Creer la table fact_sinistre_meteo;SQL;0,2
+06_controles.sql;Lancer les controles de cohérence;SQL;0,1

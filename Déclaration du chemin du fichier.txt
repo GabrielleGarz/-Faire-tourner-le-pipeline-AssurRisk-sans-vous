@@ -1,0 +1,8 @@
+# Déclaration du chemin du fichier local
+chemin_meteo = "meteo_30_villes.json"
+
+
+if os.path.exists(chemin_meteo):
+    print("  [INFO] Cas 1 : Le fichier local existe -> chargement direct sans appel API.")
+else:
+    print("  [INFO] Cas 2 : Le fichier local est manquant -> interrogation de l'API Open-Meteo...")

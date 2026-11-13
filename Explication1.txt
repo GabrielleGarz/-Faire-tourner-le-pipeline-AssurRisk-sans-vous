@@ -1,0 +1,23 @@
+Explication1
+
+import io
+tampon = io.StringIO()
+meteo.to_csv(tampon, index=False, header=False)
+tampon.seek(0)
+curseur.copy_expert("COPY meteo_assurrisk FROM STDIN WITH (FORMAT csv)", tampon)
+print("  [PYTHON]", len(meteo), "lignes de meteo chargees")
+
+
+
+
+import io : importe le module standard io de Python, qui fournit des outils pour manipuler différents types d'entrées/sorties (ici, la gestion de flux de données en mémoire vive).
+
+tampon = io.StringIO() : crée un objet StringIO vide, c'est-à-dire un fichier virtuel stocké entièrement en mémoire RAM (et non sur le disque dur). Il va servir de zone de transit.
+
+meteo.to_csv(tampon, index=False, header=False) : exporte le contenu du DataFrame Pandas meteo au format texte CSV directement à l'intérieur du tampon en mémoire. Les paramètres index=False et header=False indiquent qu'on n'écrit ni les numéros de lignes (index) ni les en-têtes de colonnes (noms des colonnes).
+
+tampon.seek(0) : déplace le curseur de lecture au tout début du tampon (position 0). C'est indispensable car l'écriture précédente l'avait laissé à la fin : pour qu'il soit relu, il faut se replacer au départ.
+
+curseur.copy_expert("COPY meteo_assurrisk FROM STDIN WITH (FORMAT csv)", tampon) : utilise le protocole bas niveau de PostgreSQL (COPY FROM STDIN) via le pilote Python (psycopg2) pour injecter en bloc toutes les données du tampon CSV dans la table cible meteo_assurrisk. C'est beaucoup plus rapide qu'une insertion ligne par ligne (INSERT).
+
+print("  [PYTHON]", len(meteo), "lignes de meteo chargees") : affiche un message de confirmation dans la console indiquant le nombre total de lignes du DataFrame (len(meteo)) qui viennent d'être chargées avec succès.
