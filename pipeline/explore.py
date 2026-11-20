@@ -1,11 +1,15 @@
 import pandas as pd
 import psycopg2
 import warnings
+from getpass import getpass
+
 warnings.filterwarnings("ignore", message="pandas only supports SQLAlchemy")
 pd.set_option("display.width", 200)
 pd.set_option("display.max_columns", 30)
+
+mot_de_passe = getpass("Mot de passe PostgreSQL : ")
 connexion = psycopg2.connect(host="localhost", port=5432, dbname="assurisk2",
-                             user="postgres", password="gaby1967")
+user="postgres", password=mot_de_passe)
 
 df = pd.read_sql("SELECT * FROM fact_sinistre_meteo", connexion)
 df["montant_estime"]   = df["montant_estime"].astype(float)
@@ -264,3 +268,5 @@ print(df['weather_code'].value_counts())
 df.groupby('weather_code').size()
 print("\nApplication de .groupby('weather_code').size() :")
 print(df.groupby('weather_code').size())
+
+print("\nExploration terminée. Vous pouvez maintenant analyser les résultats)")
