@@ -1,0 +1,8 @@
+﻿controle;objet;valeur_observee;attendu
+garde_fichier_local;meteo_30_villes.json;True;True
+nb_villes_json;meteo_brute;30;30
+lignes_dataframe_meteo;meteo;21930;21930
+lignes_clean_fact_sinistre;clean_fact_sinistre;12098;> 0
+lignes_fact_sinistre;fact_sinistre;12490;> 0
+lignes_fact_sinistre_meteo;fact_sinistre_meteo;12098;> 0
+lignes_villes_chargees;villes_coordonnees_meteo;31;31

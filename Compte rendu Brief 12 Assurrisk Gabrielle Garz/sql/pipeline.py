@@ -5,7 +5,7 @@ import pandas as pd
 import json
 import io
 import os
-import os
+
 
 # Création sécurisée du répertoire des sorties
 os.makedirs("../sorties", exist_ok=True)
@@ -17,6 +17,37 @@ connexion = psycopg2.connect(host="localhost", port=5432, dbname="assurisk2",
 connexion.autocommit = True
 curseur = connexion.cursor()
 print("connexion ouverte")
+journal = []
+
+def enregistrer_etape(fichier, etape, outil, debut):
+  duree = round(time.time() - debut, 1)
+  journal.append([fichier, etape, outil, duree, "ok"])
+  return duree
+
+def jouer_sql(fichier, libelle):
+  debut = time.time()
+  requete = open(fichier, encoding="utf-8").read()
+  curseur.execute(requete)
+  duree = enregistrer_etape(fichier, libelle, "SQL", debut)
+  print("  [SQL]", libelle, "-", duree, "s")
+
+def charger_dans_postgres (tableau, nom_table):
+    tampon = io.StringIO()
+    tableau.to_csv(tampon, index=False, header=False)
+    tampon.seek(0)
+    curseur.copy_expert(f"COPY {nom_table} FROM STDIN WITH (FORMAT csv)", tampon)
+
+def verifier_comptage_table(table, label=None):
+  """Retourne le nombre de lignes d'une table PostgreSQL et affiche un contrôle."""
+  nom_affiche = label or table
+  resultat = pd.read_sql(f"SELECT count(*) AS n FROM {table}", connexion)
+  nb_lignes = int(resultat["n"][0])
+  print(f"      controle : {nom_affiche} = {nb_lignes} lignes")
+  return nb_lignes
+
+def combien(nom_de_table):
+  curseur.execute("SELECT count(*) FROM " + nom_de_table)
+  return curseur.fetchone()[0]
 
 # -------------------------------------------------------------
 # GARDE OPEN-METEO
@@ -37,14 +68,8 @@ etapes_avant = [
     ("03_tables_meteo.sql", "Creer les tables qui attendent la meteo"),
 ]
 
-journal = []
 for fichier, libelle in etapes_avant:
-    debut = time.time()
-    requete = open(fichier, encoding="utf-8").read()
-    curseur.execute(requete)
-    duree = round(time.time() - debut, 1)
-    journal.append([fichier, libelle, "SQL", duree])
-    print("  [SQL]", libelle, "-", duree, "s")
+    jouer_sql(fichier, libelle)
 
 
 # -------------------------------------------------------------
@@ -64,21 +89,25 @@ for localisation in meteo_brute:
 meteo = pd.concat(morceaux, ignore_index=True)
 
 # Injection de la table meteo_assurrisk
-tampon = io.StringIO()
-meteo.to_csv(tampon, index=False, header=False)
-tampon.seek(0)
-curseur.copy_expert("COPY meteo_assurrisk FROM STDIN WITH (FORMAT csv)", tampon)
+charger_dans_postgres(meteo,  "meteo_assurrisk")
 
 # Injection de la table villes_coordonnees_meteo
 villes = pd.read_csv("villes_coordonnees_meteo.csv", encoding="utf-8-sig")
-tampon_villes = io.StringIO()
-villes.to_csv(tampon_villes, index=False, header=False)
-tampon_villes.seek(0)
-curseur.copy_expert("COPY villes_coordonnees_meteo FROM STDIN WITH (FORMAT csv)", tampon_villes)
+charger_dans_postgres(villes, "villes_coordonnees_meteo")
 
-duree = round(time.time() - debut, 1)
-journal.append(["pipeline.py", "Charger la meteo et les villes", "PYTHON", duree])
-print("  [PYTHON]", len(meteo), "lignes de meteo et", len(villes), "villes -", duree, "s")
+#Créer un journal de l'étape Python
+duree = enregistrer_etape(
+    "pipeline.py", "Charger la meteo et les villes", "PYTHON", debut
+)
+print(
+    "  [PYTHON]",
+    len(meteo),
+    "lignes de meteo et",
+    len(villes),
+    "villes -",
+    duree,
+    "s",
+)
 
 
 # -------------------------------------------------------------
@@ -90,40 +119,52 @@ etapes_apres = [
     ("06_controles.sql", "Lancer les controles de cohérence")
 ]
 for fichier, libelle in etapes_apres:
-    debut = time.time()
-    requete = open(fichier, encoding="utf-8").read()
-    curseur.execute(requete)
-    duree = round(time.time() - debut, 1)
-    journal.append([fichier, libelle, "SQL", duree])
-    print("  [SQL]", libelle, "-", duree, "s")
+    jouer_sql(fichier, libelle)
 
 
 # -------------------------------------------------------------
 # JOURNALISATION ET CONTRÔLES FINAUX
 # -------------------------------------------------------------
-suivi = pd.DataFrame(journal, columns=["fichier", "etape", "outil", "secondes"])
-suivi.to_csv("../sorties/journal_pipeline.csv", sep=";", decimal=",",
-             index=False, encoding="utf-8-sig")
+suivi = pd.DataFrame(journal, columns=["fichier", "etape", "outil", "secondes", "statut"])
+suivi.to_csv("../sorties/journal_pipeline.csv", sep=";", decimal=",", index=False, encoding="utf-8-sig")
 
-verification = pd.read_sql("SELECT count(*) AS n FROM clean_fact_sinistre", connexion)
-print("      controle : clean_fact_sinistre =", verification["n"][0], "lignes")
-
-verification = pd.read_sql("SELECT count(*) AS n FROM fact_sinistre", connexion)
-print("      controle : fact_sinistre =", verification["n"][0], "lignes")
-
-verification = pd.read_sql("SELECT count(*) AS n FROM fact_sinistre_meteo", connexion)
-print("      controle : fact_sinistre_meteo =", verification["n"][0], "lignes")
+nb_clean_fact_sinistre = verifier_comptage_table("clean_fact_sinistre")
+nb_fact_sinistre = verifier_comptage_table("fact_sinistre")
+nb_fact_sinistre_meteo = verifier_comptage_table("fact_sinistre_meteo")
 
 # -------------------------------------------------------------
 # GÉNÉRATION AUTOMATIQUE DU FICHIER DE CONTRÔLES PYTHON (controles_python.csv)
 # -------------------------------------------------------------
 controles_python = [
-    ["garde_fichier_local", "meteo_30_villes.json", os.path.exists(chemin_meteo), True],
+    [
+        "garde_fichier_local",
+        "meteo_30_villes.json",
+        os.path.exists(chemin_meteo),
+        True,
+    ],
     ["nb_villes_json", "meteo_brute", len(meteo_brute), 30],
     ["lignes_dataframe_meteo", "meteo", len(meteo), len(meteo)],
-    ["lignes_clean_fact_sinistre", "clean_fact_sinistre", int(verification["n"][0]), "> 0"],
-    ["lignes_villes_chargees", "villes_coordonnees_meteo", len(villes), len(villes)],
+    [
+        "lignes_clean_fact_sinistre",
+        "clean_fact_sinistre",
+        nb_clean_fact_sinistre,
+        "> 0",
+    ],
+    ["lignes_fact_sinistre", "fact_sinistre", nb_fact_sinistre, "> 0"],
+    [
+        "lignes_fact_sinistre_meteo",
+        "fact_sinistre_meteo",
+        nb_fact_sinistre_meteo,
+        "> 0",
+    ],
+    [
+        "lignes_villes_chargees",
+        "villes_coordonnees_meteo",
+        len(villes),
+        len(villes),
+    ],
 ]
+
 
 df_controles_python = pd.DataFrame(controles_python, columns=["controle", "objet", "valeur_observee", "attendu"])
 df_controles_python.to_csv("../sorties/controles_python.csv", sep=";", decimal=",",
@@ -163,6 +204,12 @@ for index, row in controles.iterrows():
 
 controles.to_csv("../sorties/controles.csv", sep=";", decimal=",",
                  index=False, encoding="utf-8-sig")
+
+print(
+    "fact_sinistre_meteo contient",
+    combien("fact_sinistre_meteo"),
+    "lignes",
+)
 
 # Fermeture propre de la connexion
 curseur.close()
