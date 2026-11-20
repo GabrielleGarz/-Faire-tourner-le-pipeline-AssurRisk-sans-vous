@@ -270,3 +270,14 @@ print("\nApplication de .groupby('weather_code').size() :")
 print(df.groupby('weather_code').size())
 
 print("\nExploration terminée. Vous pouvez maintenant analyser les résultats)")
+print("Fermeture de la connexion à la base de données.")
+
+#Calcul des correlations météologiques avec les sinistres
+correlation = df[['montant_estime', 'franchise', 'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_gusts_10m_max']].corr()
+print("\nMatrice de corrélation entre les variables météorologiques et les sinistres :")
+print(correlation)
+
+# Fermeture propre de la connexion
+
+connexion.close()
+print("connexion fermée")

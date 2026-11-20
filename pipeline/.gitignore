@@ -1,0 +1,17 @@
+# Environnement virtuel & cache Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Fichiers générés / sorties (si régénérés par le pipeline)
+sorties/
+*.csv
+*.json
+.env
+
+#Autres fichiers à ignorer
+**/exercices-S46.pdf
+
