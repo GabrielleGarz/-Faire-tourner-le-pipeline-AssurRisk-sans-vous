@@ -1,0 +1,12 @@
+# l'environnement Python : des milliers de fichiers, jamais versionnés
+.venv/
+
+# les sorties : elles se régénèrent en lançant le pipeline
+sorties/
+
+# les données brutes : trop lourdes pour un dépôt
+donnees/
+
+# Python
+__pycache__/
+*.pyc
