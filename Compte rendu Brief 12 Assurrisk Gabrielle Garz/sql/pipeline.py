@@ -6,7 +6,7 @@ import json
 import io
 import os
 
-
+# Orchestre l'initialisation SQL, l'ingestion météo et les contrôles qualité du pipeline AssurRisk.
 # Création sécurisée du répertoire des sorties
 os.makedirs("../sorties", exist_ok=True)
 
