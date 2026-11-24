@@ -20,7 +20,6 @@ Ce que j'ai trouvé : Dégâts des eaux à 44,8 % (tempêtes 12,9 %, grêle 4,0 
 Ma conclusion : Infirmée — niveau de confiance élevé, les trois axes de vérification (nature, géographie, temporalité) convergent.
 
 ## Partie 4 — Ce que la météo n’explique pas
-## Partie 4 — Ce que la météo n’explique pas
 Corrélation 1 : `montant_estime` vs précipitations (`precipitation_sum`) : r = +0,022 (et `franchise` : r = -0,002), soit une absence de lien linéaire.
 Corrélation 2 : `montant_estime` vs rafales de vent (`wind_gusts_10m_max`) : r = -0,015 (et `franchise` : r = -0,035), soit une corrélation quasi nulle.
 Corrélation 3 : `montant_estime` vs températures (`temperature_2m_max` : r = +0,031 ; `temperature_2m_min` : r = +0,025), sans effet linéaire marqué sur le montant.

@@ -19,18 +19,18 @@ assurisk2/
 │   └── villes_coordonnees_meteo.csv     # Référentiel géographique des villes
 ├── sql/
 │   ├── 01_init.sql                      # Réinitialisation et purge (TRUNCATE CASCADE)
-│   ├── 02_clean.sql                     # Construction de la couche propre (clean_*)
+│   ├── 02_clean.sql                     # Couche propre (clean_*) et traitement NULL / chaînes vides
 │   ├── 03_tables_meteo.sql              # Création des structures d'accueil météo
-│   ├── 04_rattachement.sql              # Rattachement géographique sinistres <-> villes
+│   ├── 04_rattachement.sql              # Rattachement géographique sinistres <-> villes (avec contrôle vides/NULL)
 │   ├── 05_croisement.sql                # Croisement final -> fact_sinistre_meteo
-│   └── 06_controles.sql                 # Requêtes SQL de vérification
+│   └── 06_controles.sql                 # Requêtes SQL de contrôle qualité (villes, météo, montants, dates)
 ├── sorties/                             # Dossier généré automatiquement au lancement
 │   ├── journal_pipeline.csv             # Historique et chronométrage de chaque étape
-│   └── controles_python.csv             # Rapport d'audit technique Python
+│   ├── controles_python.csv             # Rapport d'audit technique Python
+│   └── controle.csv                     # Synthèse des contrôles qualité exécutés par les scripts SQL
 ├── pipeline.py                          # Script principal d'orchestration hybride
 └── README.md                            # Documentation du projet
 ```
-
 ---
 
 ## ⚙️ Fonctionnement de la Chaîne Hybride (`pipeline.py`)
