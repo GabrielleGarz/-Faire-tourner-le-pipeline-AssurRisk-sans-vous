@@ -13,24 +13,26 @@ Auparavant, la reconstruction de la table analytique finale (`fact_sinistre_mete
 ## 🏗️ Architecture et Structure du Projet
 
 ```text
-assurisk2/
-├── donnees/
-│   ├── meteo_30_villes.json             # Cache local des données météo (30 villes)
-│   └── villes_coordonnees_meteo.csv     # Référentiel géographique des villes
-├── sql/
-│   ├── 01_init.sql                      # Réinitialisation et purge (TRUNCATE CASCADE)
-│   ├── 02_clean.sql                     # Couche propre (clean_*) et traitement NULL / chaînes vides
-│   ├── 03_tables_meteo.sql              # Création des structures d'accueil météo
-│   ├── 04_rattachement.sql              # Rattachement géographique sinistres <-> villes (avec contrôle vides/NULL)
-│   ├── 05_croisement.sql                # Croisement final -> fact_sinistre_meteo
-│   └── 06_controles.sql                 # Requêtes SQL de contrôle qualité (villes, météo, montants, dates)
-├── sorties/                             # Dossier généré automatiquement au lancement
-│   ├── journal_pipeline.csv             # Historique et chronométrage de chaque étape
-│   ├── controles_python.csv             # Rapport d'audit technique Python
-│   └── controle.csv                     # Synthèse des contrôles qualité exécutés par les scripts SQL
-├── pipeline.py                          # Script principal d'orchestration hybride
-└── README.md                            # Documentation du projet
-```
+## 🏗️ Architecture et Structure du Projet
+
+```text
+Brief 12/
+└── Compte rendu Brief 12/
+    ├── sorties/                             # Dossier généré automatiquement au lancement
+    │   ├── controles_python.csv             # Rapport d'audit technique Python
+    │   ├── controles.csv                    # Résultats des audits SQL et contrôles qualité
+    │   └── journal_pipeline.csv             # Historique et chronométrage de chaque étape
+    └── sql/
+        ├── 01_init.sql                      # Réinitialisation et purge (TRUNCATE CASCADE)
+        ├── 02_clean.sql                     # Couche propre (clean_*) et traitement NULL / chaînes vides
+        ├── 03_tables_meteo.sql              # Création des structures d'accueil météo
+        ├── 04_rattachement.sql              # Rattachement géographique sinistres <-> villes (avec contrôle vides/NULL)
+        ├── 05_croisement.sql                # Croisement final -> fact_sinistre_meteo
+        ├── 06_controles.sql                 # Requêtes SQL de contrôle qualité (villes, météo, montants, dates)
+        ├── meteo_30_villes.json             # Cache local des données météo (30 villes)
+        ├── pipeline.py                      # Script principal d'orchestration hybride
+        ├── pipeline_sauvegarde.py           # Copie de sauvegarde du script d'orchestration
+        └── villes_coordonnees_meteo.csv     # Référentiel géographique des villes
 ---
 
 ## ⚙️ Fonctionnement de la Chaîne Hybride (`pipeline.py`)
